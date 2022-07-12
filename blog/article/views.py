@@ -1,8 +1,12 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from article.models import Article,Comment
-from article.forms import ArticleForm
+from django.contrib.auth import authenticate
+from django.db.models.query_utils import Q
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
+
+from article.forms import ArticleForm
+from article.models import Article, Comment
+
 # Create your views here.
 def article(request):
     '''
@@ -10,6 +14,17 @@ def article(request):
     '''
     articles = {article:Comment.objects.filter(article=article) for article in Article.objects.all()}
     context = {'articles':articles}
+    return render(request, 'article/article.html', context)
+    
+
+def articleCreate(request):
+    '''
+    Create a new article instance
+        1. If method is GET, render an empty form
+        2. If method is POST,
+           * validate the form and display error messages if the form is invalid
+           * else, save it to the model and redirect to the article page
+    '''
     template = 'article/articleCreateUpdate.html'
     if request.method == 'GET':
         
@@ -22,17 +37,10 @@ def article(request):
     articleForm.save()
     messages.success(request, '文章已新增')
     return redirect('article:article')
-@require_POST
-def articleCreate(request):
-    '''
-    Create a new article instance
-        1. If method is GET, render an empty form
-        2. If method is POST,
-           * validate the form and display error messages if the form is invalid
-           * else, save it to the model and redirect to the article page
-    '''
-    # TODO: finish the code
-    return render(request, 'article/articleUpdate.html')
+ 
+
+
+
 def articleRead(request, articleId):
     '''
     Read an article
@@ -46,6 +54,7 @@ def articleRead(request, articleId):
         'comments': Comment.objects.filter(article=article)
     }
     return render(request, 'article/articleRead.html', context)
+
 def articleUpdate(request, articleId):
     '''
     Update the article instance:
@@ -70,6 +79,8 @@ def articleUpdate(request, articleId):
     articleForm.save()
     messages.success(request, '文章已修改') 
     return redirect('article:articleRead', articleId=articleId)
+
+
 def articleDelete(request, articleId):
     '''
     Delete the article instance:
@@ -95,7 +106,6 @@ def articleSearch(request):
                                       Q(content__icontains=searchTerm))
     context = {'articles':articles, 'searchTerm':searchTerm} 
     return render(request, 'article/articleSearch.html', context)
-
 
 
 
